@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel
 
 from app.config import settings
+import app.models  # noqa: F401  — registers all tables with SQLModel.metadata
 
 # ── Engine ──────────────────────────────────────────────────────
 engine = create_async_engine(

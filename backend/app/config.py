@@ -27,9 +27,17 @@ class Settings(BaseSettings):
     # ── Derived ─────────────────────────────────────────────────
     @property
     def database_url(self) -> str:
-        """Async PostgreSQL connection string."""
+        """Async PostgreSQL connection string (for app runtime)."""
         return (
             f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        )
+
+    @property
+    def sync_database_url(self) -> str:
+        """Sync PostgreSQL connection string (for Alembic migrations)."""
+        return (
+            f"postgresql+psycopg2://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
 
