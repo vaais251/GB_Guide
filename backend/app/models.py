@@ -10,11 +10,9 @@ Architecture:
            └── GuideProfile
 """
 
-from __future__ import annotations
-
 import enum
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from sqlmodel import Field, Relationship, SQLModel, Column
 from sqlalchemy import Text, Enum as SAEnum
@@ -52,7 +50,7 @@ class User(SQLModel, table=True):
     """
     __tablename__ = "users"
 
-    id: int | None = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     email: str = Field(
         index=True,
         unique=True,
@@ -64,12 +62,17 @@ class User(SQLModel, table=True):
         description="Bcrypt / Argon2 hash — never store plaintext.",
     )
     full_name: str = Field(max_length=150)
-    city: str | None = Field(default=None, max_length=100)
-    phone_number: str | None = Field(default=None, max_length=20)
+    city: Optional[str] = Field(default=None, max_length=100)
+    phone_number: Optional[str] = Field(default=None, max_length=20)
     role: UserRole = Field(
         default=UserRole.CUSTOMER,
         sa_column=Column(
-            SAEnum(UserRole, name="userrole", create_constraint=True),
+            SAEnum(
+                UserRole,
+                name="userrole",
+                create_constraint=True,
+                values_callable=lambda e: [member.value for member in e],
+            ),
             nullable=False,
             server_default=UserRole.CUSTOMER.value,
         ),
@@ -77,8 +80,8 @@ class User(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     # ── Relationships ───────────────────────────────────────────
-    hotels: list["Hotel"] = Relationship(back_populates="owner")
-    cars: list["Car"] = Relationship(back_populates="owner")
+    hotels: List["Hotel"] = Relationship(back_populates="owner")
+    cars: List["Car"] = Relationship(back_populates="owner")
     guide_profile: Optional["GuideProfile"] = Relationship(
         back_populates="user",
         sa_relationship_kwargs={"uselist": False},
@@ -96,7 +99,7 @@ class Hotel(SQLModel, table=True):
     """
     __tablename__ = "hotels"
 
-    id: int | None = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     owner_id: int = Field(foreign_key="users.id", index=True)
     name: str = Field(max_length=200)
     location: str = Field(
@@ -107,26 +110,26 @@ class Hotel(SQLModel, table=True):
         max_length=100,
         description="GB city — e.g. Gilgit, Skardu, Hunza.",
     )
-    description: str | None = Field(
+    description: Optional[str] = Field(
         default=None,
         sa_column=Column(Text, nullable=True),
     )
-    images: list[str] | None = Field(
+    images: Optional[List[str]] = Field(
         default=None,
         sa_column=Column(ARRAY(VARCHAR), nullable=True),
     )
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     # ── Relationships ───────────────────────────────────────────
-    owner: User = Relationship(back_populates="hotels")
-    rooms: list["Room"] = Relationship(back_populates="hotel")
+    owner: "User" = Relationship(back_populates="hotels")
+    rooms: List["Room"] = Relationship(back_populates="hotel")
 
 
 class Room(SQLModel, table=True):
     """A room type within a hotel — e.g. Deluxe, Standard."""
     __tablename__ = "rooms"
 
-    id: int | None = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     hotel_id: int = Field(foreign_key="hotels.id", index=True)
     room_type: str = Field(
         max_length=100,
@@ -137,7 +140,7 @@ class Room(SQLModel, table=True):
     is_available: bool = Field(default=True)
 
     # ── Relationships ───────────────────────────────────────────
-    hotel: Hotel = Relationship(back_populates="rooms")
+    hotel: "Hotel" = Relationship(back_populates="rooms")
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -151,7 +154,7 @@ class Car(SQLModel, table=True):
     """
     __tablename__ = "cars"
 
-    id: int | None = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     owner_id: int = Field(foreign_key="users.id", index=True)
     make: str = Field(max_length=100, description="E.g. Toyota, Suzuki.")
     model: str = Field(max_length=100, description="E.g. Corolla, Bolan.")
@@ -163,12 +166,17 @@ class Car(SQLModel, table=True):
     status: VerificationStatus = Field(
         default=VerificationStatus.PENDING,
         sa_column=Column(
-            SAEnum(VerificationStatus, name="verificationstatus", create_constraint=True),
+            SAEnum(
+                VerificationStatus,
+                name="verificationstatus",
+                create_constraint=True,
+                values_callable=lambda e: [member.value for member in e],
+            ),
             nullable=False,
             server_default=VerificationStatus.PENDING.value,
         ),
     )
-    driver_license_image: str | None = Field(
+    driver_license_image: Optional[str] = Field(
         default=None,
         max_length=500,
         description="URL to uploaded driver license image.",
@@ -176,7 +184,7 @@ class Car(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     # ── Relationships ───────────────────────────────────────────
-    owner: User = Relationship(back_populates="cars")
+    owner: "User" = Relationship(back_populates="cars")
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -190,18 +198,18 @@ class GuideProfile(SQLModel, table=True):
     """
     __tablename__ = "guide_profiles"
 
-    id: int | None = Field(default=None, primary_key=True)
+    id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(
         foreign_key="users.id",
         unique=True,
         index=True,
     )
-    bio: str | None = Field(
+    bio: Optional[str] = Field(
         default=None,
         sa_column=Column(Text, nullable=True),
     )
     daily_rate: float = Field(description="Daily rate in PKR.")
-    languages: list[str] | None = Field(
+    languages: Optional[List[str]] = Field(
         default=None,
         sa_column=Column(ARRAY(VARCHAR), nullable=True),
         description="E.g. ['Urdu', 'English', 'Brushaski'].",
@@ -214,12 +222,13 @@ class GuideProfile(SQLModel, table=True):
                 name="verificationstatus",
                 create_constraint=True,
                 create_type=False,       # re-use the type created by Car
+                values_callable=lambda e: [member.value for member in e],
             ),
             nullable=False,
             server_default=VerificationStatus.PENDING.value,
         ),
     )
-    cnic_image: str | None = Field(
+    cnic_image: Optional[str] = Field(
         default=None,
         max_length=500,
         description="URL to uploaded CNIC image for verification.",
@@ -227,4 +236,4 @@ class GuideProfile(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     # ── Relationships ───────────────────────────────────────────
-    user: User = Relationship(back_populates="guide_profile")
+    user: "User" = Relationship(back_populates="guide_profile")

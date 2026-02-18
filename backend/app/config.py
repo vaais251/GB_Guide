@@ -53,6 +53,11 @@ class Settings(BaseSettings):
     APP_NAME: str = "GB Guide API"
     DEBUG: bool = True
 
+    # ── JWT Authentication ──────────────────────────────────────
+    JWT_SECRET_KEY: str = "change-me-to-a-very-long-random-string-in-production"
+    JWT_ALGORITHM: str = "HS256"
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+
 
 # Singleton instance
 settings = Settings()

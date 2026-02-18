@@ -12,6 +12,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import create_db_and_tables
 from app.routers.health import router as health_router
+from app.api.routes.auth import router as auth_router
+from app.api.routes.hotels import router as hotels_router
 
 
 # ── Lifecycle ───────────────────────────────────────────────────
@@ -45,6 +47,8 @@ app.add_middleware(
 
 # ── Routers ─────────────────────────────────────────────────────
 app.include_router(health_router)
+app.include_router(auth_router)
+app.include_router(hotels_router)
 
 
 # ── Root Redirect (optional convenience) ────────────────────────
